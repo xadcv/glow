@@ -1,6 +1,9 @@
 import { ethers } from "hardhat";
-import { DssGlow__factory } from "../typechain-types";
+import { DaiJoinLike, DaiJoinLike__factory, DaiLike, DaiLike__factory, DssGlow, DssGlow__factory, GusdLike, GusdLike__factory, PsmLike, PsmLike__factory } from "../typechain-types";
+import { expect } from "chai";
 import * as dotenv from "dotenv";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Signer } from "ethers";
 
 dotenv.config();
 
@@ -24,32 +27,40 @@ const VOW = '0x23f78612769b9013b3145E43896Fa1578cAa2c2a';
 const GUSD_PSM = '0x3B2dBE6767fD8B4f8334cE3E8EC3E2DF8aB3957b';
 const DAI = '0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844';
 
-describe("DssGlow", async () => {
+describe("DSS Glow", async () => {
+    let daiJoin: DaiJoinLike;
+    let daiToke: DaiLike;
+    let gusdToke: GusdLike;
+    let gusdPsm: PsmLike;
+    let glowContract: DssGlow;
+    let deployer: SignerWithAddress;
+    let gusdDeployer: SignerWithAddress;
+    let otherDeployer: SignerWithAddress;
 
     beforeEach(async () => {
-        const options = {
-            alchemy: process.env.ALCHEMY_API_KEY,
-            infura: process.env.INFURA_API_KEY,
-        };
-        let provider = ethers.getDefaultProvider("goerli", options);
-        let wallet;
-        if (process.env.WALLET_PRIVATE_KEY != undefined) {
-            wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY ?? "", provider);
-        } else if (process.env.MNEMONIC) {
-            wallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC ?? "");
-        } else {
-            throw new Error("WALLET_PRIVATE_KEY or MNEMONIC is needed.");
-        }
-        console.log(`Using Signer address ${wallet.address}`);
-        let signer = wallet.connect(provider);
-        const GlowFactory = new DssGlow__factory(signer);
-    })
+        [deployer, gusdDeployer, otherDeployer] = await ethers.getSigners();
 
-    describe("Deployment", async () => {
-        it("Should deploy to a new address", async () => {
-            console.log('test');
+        const GlowFactory = new DssGlow__factory(deployer);
+
+        // const DaiJoinFactory = new DaiJoinLike__factory();
+        // const DaiTokeFactory = new DaiLike__factory();
+        // const GusdTokeFactory = new GusdLike__factory();
+        // const GusdPsmFactory = new PsmLike__factory();
+
+        glowContract = await GlowFactory.deploy(DAI_JOIN, GUSD, VOW, GUSD_PSM);
+        await glowContract.deployed();
+
+        describe("When Glow is deployed", async () => {
+            it("the right addresses are saved as parameters", async () => {
+                const _daiJoin = await glowContract.daiJoin();
+                expect(_daiJoin).to.eq(DAI_JOIN);
+            })
         })
+
+
+
 
     })
 
 })
+
